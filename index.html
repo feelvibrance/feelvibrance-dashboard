@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feel Vibrance — Intelligence Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#F7F5F3;
+  --surface:#FFFFFF;
+  --bordeaux:#1C0A0A;
+  --bordeaux-mid:#2d1212;
+  --gold:#C4A882;
+  --gold-dark:#a08660;
+  --text:#1C0A0A;
+  --text-mid:#5a4a4a;
+  --text-light:#9a8a8a;
+  --border:#EAE4DE;
+  --urgent:#c0392b;
+  --week:#d97706;
+  --monitor:#2d7a4f;
+  --success:#27ae60;
+  --radius:8px;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  min-height:100vh;
+}
+
+/* SIDEBAR */
+.sidebar{
+  position:fixed;
+  left:0;top:0;bottom:0;
+  width:220px;
+  background:var(--bordeaux);
+  display:flex;
+  flex-direction:column;
+  padding:28px 20px;
+  z-index:100;
+}
+
+.sidebar-logo{
+  display:flex;
+  align-items:baseline;
+  gap:4px;
+  margin-bottom:40px;
+  padding-left:4px;
+}
+.logo-feel{font-size:10px;font-weight:300;color:rgba(255,255,255,0.4);letter-spacing:0.05em}
+.logo-vibrance{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:500;color:#fff}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:6px;
+  font-size:12px;
+  font-weight:400;
+  color:rgba(255,255,255,0.5);
+  cursor:pointer;
+  transition:all 0.15s;
+  margin-bottom:4px;
+  letter-spacing:0.02em;
+  user-select:none;
+}
+.nav-item:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.05)}
+.nav-item.active{color:#fff;background:rgba(196,168,130,0.15);border-left:2px solid var(--gold)}
+.nav-icon{font-size:14px;opacity:0.7;width:18px;text-align:center}
+
+.sidebar-divider{height:1px;background:rgba(255,255,255,0.08);margin:16px 0}
+
+.nav-label{
+  font-size:9px;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.25);
+  padding:0 12px;
+  margin-bottom:8px;
+}
+
+.sidebar-bottom{margin-top:auto}
+.api-status{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  background:rgba(255,255,255,0.04);
+  border-radius:6px;
+}
+.api-dot{width:6px;height:6px;border-radius:50%;background:#27ae60;box-shadow:0 0 6px rgba(39,174,96,0.5)}
+.api-text{font-size:10px;color:rgba(255,255,255,0.4)}
+
+/* MAIN */
+.main{
+  margin-left:220px;
+  padding:28px 32px;
+  min-height:100vh;
+}
+
+/* TOP BAR */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:28px;
+}
+.topbar-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;color:var(--bordeaux)}
+.topbar-meta{font-size:11px;color:var(--text-light);letter-spacing:0.03em}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.run-btn{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  background:var(--bordeaux);
+  color:#fff;
+  border:none;
+  padding:10px 20px;
+  border-radius:6px;
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  transition:all 0.2s;
+}
+.run-btn:hover{background:var(--bordeaux-mid)}
+.run-btn:disabled{opacity:0.5;cursor:not-allowed}
+.run-btn .spinner{width:12px;height:12px;border:1.5px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:none}
+.run-btn.loading .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.upload-btn{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  background:var(--surface);
+  color:var(--text-mid);
+  border:1px solid var(--border);
+  padding:10px 16px;
+  border-radius:6px;
+  font-size:11px;
+  font-weight:400;
+  cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  transition:all 0.15s;
+}
+.upload-btn:hover{border-color:var(--gold);color:var(--bordeaux)}
+#csv-input{display:none}
+
+/* METRIC CARDS */
+.metrics-row{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin-bottom:24px;
+}
+
+.metric-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:20px;
+  position:relative;
+  overflow:hidden;
+}
+
+.metric-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.metric-label-text{font-size:10px;font-weight:400;color:var(--text-light);letter-spacing:0.05em;text-transform:uppercase}
+.metric-icon{font-size:16px;opacity:0.4}
+
+.metric-value{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--bordeaux);line-height:1;margin-bottom:6px}
+.metric-value small{font-size:18px}
+
+.metric-bottom{display:flex;align-items:center;justify-content:space-between}
+.metric-sub{font-size:10px;color:var(--text-light)}
+.metric-trend{
+  display:flex;
+  align-items:center;
+  gap:3px;
+  font-size:10px;
+  font-weight:500;
+  padding:2px 7px;
+  border-radius:20px;
+}
+.metric-trend.up{color:var(--success);background:rgba(39,174,96,0.08)}
+.metric-trend.down{color:var(--urgent);background:rgba(192,57,43,0.08)}
+.metric-trend.neutral{color:var(--gold-dark);background:rgba(196,168,130,0.1)}
+
+/* MINI CHART */
+.mini-chart{
+  display:flex;
+  align-items:flex-end;
+  gap:3px;
+  height:32px;
+  margin-top:10px;
+}
+.mini-bar{
+  flex:1;
+  background:rgba(196,168,130,0.25);
+  border-radius:2px;
+  transition:height 0.3s;
+}
+.mini-bar.highlight{background:var(--gold)}
+
+/* TWO COLUMN */
+.two-col{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-bottom:24px;
+}
+
+.three-col{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:16px;
+  margin-bottom:24px;
+}
+
+/* CARD */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+}
+
+.card-header{
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.card-title{
+  font-size:11px;
+  font-weight:500;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--text-mid);
+}
+
+.card-badge{
+  font-size:9px;
+  padding:3px 8px;
+  border-radius:20px;
+  background:rgba(196,168,130,0.1);
+  color:var(--gold-dark);
+  font-weight:500;
+  letter-spacing:0.05em;
+}
+
+.card-body{padding:20px}
+
+/* AD SET ROW */
+.adset-row{
+  display:flex;
+  align-items:center;
+  padding:12px 20px;
+  border-bottom:1px solid var(--border);
+  gap:12px;
+}
+.adset-row:last-child{border-bottom:none}
+
+.adset-status{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.adset-status.active{background:#27ae60;box-shadow:0 0 5px rgba(39,174,96,0.4)}
+.adset-status.inactive{background:#ccc}
+
+.adset-name-col{flex:1;font-size:12px;font-weight:500;color:var(--text)}
+.adset-stat-col{text-align:right;min-width:60px}
+.adset-stat-val{font-size:13px;font-weight:500;color:var(--bordeaux)}
+.adset-stat-lab{font-size:9px;color:var(--text-light);letter-spacing:0.05em;text-transform:uppercase}
+
+.adset-bar-wrap{width:80px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.adset-bar-fill{height:100%;background:var(--gold);border-radius:2px}
+
+/* ACTION CARDS */
+.actions-list{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding:16px 20px;
+}
+
+.action-card{
+  display:flex;
+  gap:14px;
+  padding:14px;
+  border-radius:6px;
+  border:1px solid transparent;
+  transition:all 0.15s;
+  cursor:pointer;
+  position:relative;
+}
+
+.action-card:hover{transform:translateX(2px)}
+
+.action-card.urgent{background:rgba(192,57,43,0.04);border-color:rgba(192,57,43,0.15)}
+.action-card.week{background:rgba(217,119,6,0.04);border-color:rgba(217,119,6,0.15)}
+.action-card.monitor{background:rgba(45,122,79,0.04);border-color:rgba(45,122,79,0.15)}
+
+.action-priority{
+  font-size:8px;
+  font-weight:600;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  padding:3px 8px;
+  border-radius:20px;
+  white-space:nowrap;
+  align-self:flex-start;
+  flex-shrink:0;
+  min-width:72px;
+  text-align:center;
+}
+.action-priority.urgent{background:rgba(192,57,43,0.1);color:var(--urgent)}
+.action-priority.week{background:rgba(217,119,6,0.1);color:var(--week)}
+.action-priority.monitor{background:rgba(45,122,79,0.1);color:var(--monitor)}
+
+.action-body{flex:1}
+.action-title{font-size:12px;font-weight:500;color:var(--bordeaux);margin-bottom:3px}
+.action-desc{font-size:11px;color:var(--text-mid);line-height:1.5}
+.action-impact{
+  font-size:10px;
+  color:var(--gold-dark);
+  margin-top:5px;
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+
+.action-done{
+  width:18px;height:18px;
+  border:1.5px solid var(--border);
+  border-radius:4px;
+  flex-shrink:0;
+  align-self:center;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:10px;
+  color:transparent;
+  transition:all 0.15s;
+}
+.action-done.checked{background:var(--success);border-color:var(--success);color:#fff}
+
+/* AI ANALYSIS BOX */
+.analysis-box{
+  padding:20px;
+  display:none;
+}
+.analysis-box.visible{display:block;animation:fadeUp 0.3s ease}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.analysis-section{margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.analysis-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.analysis-section-label{
+  font-size:9px;letter-spacing:0.18em;text-transform:uppercase;
+  color:var(--gold-dark);margin-bottom:8px;font-weight:500;
+}
+.analysis-section p,.analysis-section li{
+  font-size:12px;line-height:1.7;color:var(--text-mid);margin-bottom:6px;
+}
+.analysis-section strong{color:var(--bordeaux);font-weight:500}
+.analysis-section ul{padding-left:16px}
+
+/* LOADING */
+.loading-row{
+  display:none;
+  align-items:center;
+  gap:14px;
+  padding:16px 20px;
+}
+.loading-row.visible{display:flex}
+.loading-text{font-size:11px;color:var(--text-light)}
+.loading-track{flex:1;height:2px;background:var(--border);border-radius:2px;overflow:hidden}
+.loading-fill{height:100%;background:var(--gold);border-radius:2px;animation:loadAnim 2.5s ease-in-out infinite}
+@keyframes loadAnim{0%{width:0%}60%{width:80%}100%{width:100%}}
+
+/* TRENDS PANEL */
+.trend-form{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  padding:16px 20px;
+  border-bottom:1px solid var(--border);
+}
+
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--text-light);font-weight:500}
+.form-input{
+  background:var(--bg);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:8px 12px;
+  font-size:12px;
+  border-radius:5px;
+  font-family:'DM Sans',sans-serif;
+  outline:none;
+  transition:border-color 0.15s;
+}
+.form-input:focus{border-color:var(--gold)}
+.form-input::placeholder{color:var(--text-light)}
+select.form-input option{background:var(--surface)}
+
+/* PANEL VISIBILITY */
+.view{display:none}
+.view.active{display:block}
+
+/* SETTINGS PANEL */
+.settings-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 20px;
+  border-bottom:1px solid var(--border);
+}
+.settings-row:last-child{border-bottom:none}
+.settings-label{font-size:12px;color:var(--text);font-weight:400}
+.settings-desc{font-size:10px;color:var(--text-light);margin-top:2px}
+.settings-input{
+  background:var(--bg);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:7px 12px;
+  font-size:12px;
+  border-radius:5px;
+  font-family:'DM Sans',sans-serif;
+  outline:none;
+  width:280px;
+}
+.settings-input:focus{border-color:var(--gold);outline:none}
+.settings-input[type=password]{letter-spacing:0.1em}
+
+.save-btn{
+  background:var(--bordeaux);
+  color:#fff;
+  border:none;
+  padding:8px 20px;
+  border-radius:5px;
+  font-size:11px;
+  font-weight:500;
+  cursor:pointer;
+  font-family:'DM Sans',sans-serif;
+  transition:all 0.15s;
+}
+.save-btn:hover{background:var(--bordeaux-mid)}
+
+.cost-note{
+  padding:14px 20px;
+  background:rgba(196,168,130,0.05);
+  border-radius:6px;
+  margin:16px 20px;
+}
+.cost-note p{font-size:11px;color:var(--text-mid);line-height:1.6}
+.cost-note strong{color:var(--bordeaux)}
+
+@media(max-width:900px){
+  .sidebar{width:60px;padding:20px 10px}
+  .nav-item span,.nav-label,.sidebar-logo,.api-text,.logo-feel{display:none}
+  .logo-vibrance{font-size:14px}
+  .main{margin-left:60px;padding:20px}
+  .metrics-row{grid-template-columns:1fr 1fr}
+  .two-col,.three-col{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-feel">feel</span>
+    <span class="logo-vibrance">Vibrance</span>
+  </div>
+
+  <div class="nav-label">Analytics</div>
+  <div class="nav-item active" onclick="switchView('ads')">
+    <span class="nav-icon">📊</span>
+    <span>Ads Strategist</span>
+  </div>
+  <div class="nav-item" onclick="switchView('trends')">
+    <span class="nav-icon">✦</span>
+    <span>Instagram Trends</span>
+  </div>
+
+  <div class="sidebar-divider"></div>
+  <div class="nav-label">Settings</div>
+  <div class="nav-item" onclick="switchView('settings')">
+    <span class="nav-icon">⚙</span>
+    <span>API & Settings</span>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="api-status">
+      <div class="api-dot" id="api-dot"></div>
+      <span class="api-text" id="api-text">No API key</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ADS VIEW -->
+  <div class="view active" id="view-ads">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Ads Strategist</div>
+        <div class="topbar-meta">12 Apr – 11 Mei 2026 · Nieuwe campagne voor Verkoop</div>
+      </div>
+      <div class="topbar-right">
+        <label class="upload-btn" for="csv-input">
+          ↑ Upload CSV
+        </label>
+        <input type="file" id="csv-input" accept=".csv" onchange="handleCSV(this)">
+        <button class="run-btn" id="ads-btn" onclick="runAdsAgent()">
+          <div class="spinner"></div>
+          <span>Analyse & Strategise</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="metrics-row">
+      <div class="metric-card">
+        <div class="metric-top">
+          <span class="metric-label-text">Total Spend</span>
+          <span class="metric-icon">💶</span>
+        </div>
+        <div class="metric-value"><small>€</small>51.44</div>
+        <div class="metric-bottom">
+          <span class="metric-sub">29 days</span>
+          <span class="metric-trend neutral">€1.77/day avg</span>
+        </div>
+        <div class="mini-chart">
+          <div class="mini-bar" style="height:30%"></div>
+          <div class="mini-bar" style="height:35%"></div>
+          <div class="mini-bar" style="height:40%"></div>
+          <div class="mini-bar" style="height:45%"></div>
+          <div class="mini-bar" style="height:55%"></div>
+          <div class="mini-bar" style="height:65%"></div>
+          <div class="mini-bar highlight" style="height:80%"></div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-top">
+          <span class="metric-label-text">Link Clicks</span>
+          <span class="metric-icon">🔗</span>
+        </div>
+        <div class="metric-value">104</div>
+        <div class="metric-bottom">
+          <span class="metric-sub">CTR 2.32%</span>
+          <span class="metric-trend neutral">Avg. for niche</span>
+        </div>
+        <div class="mini-chart">
+          <div class="mini-bar" style="height:20%"></div>
+          <div class="mini-bar" style="height:25%"></div>
+          <div class="mini-bar" style="height:40%"></div>
+          <div class="mini-bar" style="height:50%"></div>
+          <div class="mini-bar" style="height:60%"></div>
+          <div class="mini-bar" style="height:70%"></div>
+          <div class="mini-bar highlight" style="height:85%"></div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-top">
+          <span class="metric-label-text">Total Reach</span>
+          <span class="metric-icon">👁</span>
+        </div>
+        <div class="metric-value">3,242</div>
+        <div class="metric-bottom">
+          <span class="metric-sub">4,483 impressions</span>
+          <span class="metric-trend neutral">Freq. 1.38</span>
+        </div>
+        <div class="mini-chart">
+          <div class="mini-bar" style="height:25%"></div>
+          <div class="mini-bar" style="height:30%"></div>
+          <div class="mini-bar" style="height:45%"></div>
+          <div class="mini-bar" style="height:55%"></div>
+          <div class="mini-bar" style="height:65%"></div>
+          <div class="mini-bar" style="height:72%"></div>
+          <div class="mini-bar highlight" style="height:90%"></div>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-top">
+          <span class="metric-label-text">Avg CPC</span>
+          <span class="metric-icon">🎯</span>
+        </div>
+        <div class="metric-value"><small>€</small>0.50</div>
+        <div class="metric-bottom">
+          <span class="metric-sub">CPM €11.47</span>
+          <span class="metric-trend up">Below benchmark</span>
+        </div>
+        <div class="mini-chart">
+          <div class="mini-bar highlight" style="height:90%"></div>
+          <div class="mini-bar" style="height:75%"></div>
+          <div class="mini-bar" style="height:65%"></div>
+          <div class="mini-bar" style="height:60%"></div>
+          <div class="mini-bar" style="height:55%"></div>
+          <div class="mini-bar" style="height:50%"></div>
+          <div class="mini-bar" style="height:45%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AD SETS + ACTIONS -->
+    <div class="two-col">
+
+      <!-- AD SET PERFORMANCE -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Ad Set Performance</span>
+          <span class="card-badge">3 ad sets</span>
+        </div>
+
+        <div class="adset-row">
+          <div class="adset-status inactive"></div>
+          <div class="adset-name-col">Verkoop <span style="font-size:10px;color:#ccc;font-weight:300">(paused)</span></div>
+          <div class="adset-stat-col">
+            <div class="adset-stat-val">3.15%</div>
+            <div class="adset-stat-lab">CTR</div>
+          </div>
+          <div class="adset-stat-col">
+            <div class="adset-stat-val">€0.42</div>
+            <div class="adset-stat-lab">CPC</div>
+          </div>
+          <div class="adset-stat-col">
+            <div class="adset-stat-val">€20.76</div>
+            <div class="adset-stat-lab">Spend</div>
+          </div>
+          <div>
+            <div class="adset-bar-wrap"><div class="adset-bar-fill" style="width:70%"></div></div>
+          </div>
+        </div>
+
+        <div class="adset-row">
+          <div class="adset-status active"></div>
+          <div class="adset-name-col">Vrouwen</div>
+          <div class="adset-stat-col">
+            <div class="adset-stat-val">2.07%</div>
+            <div class="adset-stat-lab">CTR</div>
+          </div>
+          <div class="adset-stat-col">
+            <div class="adset-stat-val">€0.50</div>
+            <div class="adset-stat-lab">CPC</div>
+          </div>
+          <div class="adset-stat-col">
+            <div class="adset-stat-val">€16.34</div>
+            <div class="adset-stat-lab">Spend</div>
+          </div>
+          <div>
+            <div class="adset-bar-wrap"><div class="adset-bar-fill" style="width:50%"></div></div>
+          </div>
+        </div>
+
+        <div class="adset-row">
+          <div class="adset-status active"></div>
+          <div class="adset-name-col">Mannen</div>
+          <div class="adset-stat-col">
+            <div class="adset-stat-val">1.65%</div>
+            <div class="adset-stat-lab">CTR</div>
+          </div>
+          <div class="adset-stat-col">
+            <div class="adset-stat-val">€0.65</div>
+            <div class="adset-stat-lab">CPC</div>
+          </div>
+          <div class="adset-stat-col">
+            <div class="adset-stat-val">€14.34</div>
+            <div class="adset-stat-lab">Spend</div>
+          </div>
+          <div>
+            <div class="adset-bar-wrap"><div class="adset-bar-fill" style="width:35%"></div></div>
+          </div>
+        </div>
+
+        <!-- Previous campaigns -->
+        <div style="padding:12px 20px;background:rgba(196,168,130,0.04);border-top:1px solid var(--border)">
+          <div style="font-size:10px;color:var(--text-light);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:8px">Previous Campaigns</div>
+          <div style="font-size:11px;color:var(--text-mid);line-height:1.8">
+            Promoten [15-3-2026]: €3.85 spent · 38 clicks · CTR 7.09% · CPM €7.18<br>
+            TEST 2: €0.73 spent · 5 clicks · CTR 4.50% · CPM €6.58
+          </div>
+        </div>
+      </div>
+
+      <!-- AI ACTIONS -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">AI Action Plan</span>
+          <span class="card-badge" id="actions-badge">Run analysis first</span>
+        </div>
+
+        <div class="loading-row" id="ads-loading">
+          <span class="loading-text">Analysing data...</span>
+          <div class="loading-track"><div class="loading-fill"></div></div>
+        </div>
+
+        <div id="actions-container">
+          <!-- Default state -->
+          <div class="actions-list" id="default-actions">
+            <div style="text-align:center;padding:32px 20px;color:var(--text-light)">
+              <div style="font-size:28px;margin-bottom:12px;opacity:0.3">⚡</div>
+              <div style="font-size:12px;line-height:1.6">Click <strong style="color:var(--bordeaux)">"Analyse & Strategise"</strong> to generate<br>dynamic action recommendations</div>
+            </div>
+          </div>
+          <div class="actions-list" id="dynamic-actions" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL ANALYSIS -->
+    <div class="card" id="full-analysis-card" style="display:none">
+      <div class="card-header">
+        <span class="card-title">Full AI Analysis</span>
+        <span class="card-badge">AI Generated</span>
+      </div>
+      <div class="analysis-box visible" id="ads-result"></div>
+    </div>
+  </div>
+
+  <!-- TRENDS VIEW -->
+  <div class="view" id="view-trends">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Instagram Trends Agent</div>
+        <div class="topbar-meta" id="trends-date">Loading date...</div>
+      </div>
+      <div class="topbar-right">
+        <button class="run-btn" id="trends-btn" onclick="runTrendsAgent()">
+          <div class="spinner"></div>
+          <span>Scan & Generate</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-header">
+        <span class="card-title">Scan Settings</span>
+      </div>
+      <div class="trend-form">
+        <div class="form-group">
+          <label class="form-label">Niche</label>
+          <input class="form-input" id="niche-input" value="sexual wellness supplements Netherlands">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Audience Segment</label>
+          <select class="form-input" id="focus-input">
+            <optgroup label="── Vrouwen 30–40 ──">
+              <option value="vrouwen_30_40_meer_zin">Vrouwen 30–40 · meer zin voor partner</option>
+              <option value="vrouwen_30_40_bevallen">Vrouwen 30–40 · bevallen + kleine kinderen</option>
+              <option value="vrouwen_30_40_clean">Vrouwen 30–40 · clean supplements</option>
+            </optgroup>
+            <optgroup label="── Vrouwen 30–50 ──">
+              <option value="vrouwen_30_50_vakantie">Vrouwen 30–50 · vakantie + seks</option>
+              <option value="vrouwen_30_50_lesbi">Vrouwen 30–50 · lesbisch</option>
+            </optgroup>
+            <optgroup label="── Mannen 30–50 ──">
+              <option value="mannen_30_50_performance">Mannen 30–50 · high performance</option>
+              <option value="mannen_30_50_vakantie">Mannen 30–50 · vakantie + seks</option>
+              <option value="mannen_30_50_homo">Mannen 30–50 · homo</option>
+            </optgroup>
+            <optgroup label="── 50+ ──">
+              <option value="vrouwen_50_menopauze">Vrouwen 50+ · menopauze</option>
+              <option value="vrouwen_50_lente">Vrouwen 50+ · lentekriebels</option>
+              <option value="vrouwen_50_sporten">Vrouwen 50+ · sporten</option>
+              <option value="mannen_50_erbij">Mannen 50+ · erbij willen horen</option>
+              <option value="mannen_50_sporten">Mannen 50+ · sporten</option>
+              <option value="algemeen_50_minder_zin">50+ · minder zin (algemeen)</option>
+            </optgroup>
+            <optgroup label="── Koppels ──">
+              <option value="koppels_30_45_meer_zin">Koppels 30–45 · weer zin voor partner</option>
+              <option value="koppels_30_45_vakantie">Koppels 30–45 · vakantie + seks</option>
+              <option value="koppels_50_vakantie">Koppels 50+ · vakantie + seks</option>
+              <option value="koppels_50_sporten">Koppels 50+ · sporten</option>
+            </optgroup>
+            <optgroup label="── AI Suggestie ──">
+              <option value="ai_suggest">✦ Laat AI een doelgroep suggereren</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Format Priority</label>
+          <select class="form-input" id="format-input">
+            <option value="mixed">Mixed formats</option>
+            <option value="reels">Reels focus</option>
+            <option value="static">Static posts</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Brand Voice Notes</label>
+          <input class="form-input" id="voice-input" value="calm, confident, Dutch audience, no marketing language">
+        </div>
+      </div>
+    </div>
+
+    <div class="loading-row" id="trends-loading">
+      <span class="loading-text">Scanning trends and generating recommendations...</span>
+      <div class="loading-track"><div class="loading-fill"></div></div>
+    </div>
+
+    <div id="trends-output" style="display:none">
+      <div class="three-col" id="trends-cards"></div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Full Recommendation</span>
+          <span class="card-badge">AI Generated</span>
+        </div>
+        <div class="analysis-box visible" id="trends-result"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS VIEW -->
+  <div class="view" id="view-settings">
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">Settings</div>
+        <div class="topbar-meta">API configuration & preferences</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header">
+        <span class="card-title">Anthropic API Key</span>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">API Key</div>
+          <div class="settings-desc">Get your key at console.anthropic.com → API Keys</div>
+        </div>
+        <input type="password" class="settings-input" id="api-key-input" placeholder="sk-ant-..." oninput="updateApiStatus()">
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Save key</div>
+          <div class="settings-desc">Saved to browser localStorage — never sent anywhere except Anthropic's API</div>
+        </div>
+        <button class="save-btn" onclick="saveApiKey()">Save API Key</button>
+      </div>
+
+      <div class="cost-note">
+        <p><strong>Cost estimate:</strong> Each analysis run uses ~1,200 tokens. At Claude Sonnet pricing that's approximately <strong>€0.003–0.005 per run</strong>. Running both agents once daily for a full month = <strong>±€0.20 total</strong>. Add €5 credit at console.anthropic.com and it will last several months.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Brand Context</span>
+        <span class="card-badge">Pre-loaded</span>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Brand name</div>
+        </div>
+        <input class="settings-input" value="Feel Vibrance — Sens" readonly>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Core message</div>
+        </div>
+        <input class="settings-input" value="Het leven vraagt veel. Verlangen verdwijnt als eerste. Sens geeft het terug." readonly>
+      </div>
+      <div class="settings-row">
+        <div>
+          <div class="settings-label">Market</div>
+        </div>
+        <input class="settings-input" value="Netherlands, Dutch-speaking, 28-50" readonly>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let apiKey = localStorage.getItem('fv_api_key') || '';
+let csvData = null;
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('trends-date').textContent =
+    new Date().toLocaleDateString('en-GB', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  if (apiKey) {
+    document.getElementById('api-key-input').value = apiKey;
+    updateApiStatus();
+  }
+});
+
+// ─── NAV ──────────────────────────────────────────────────────────────────────
+function switchView(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ─── API KEY ──────────────────────────────────────────────────────────────────
+function saveApiKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val) return;
+  apiKey = val;
+  localStorage.setItem('fv_api_key', val);
+  updateApiStatus();
+  alert('API key saved.');
+}
+
+function updateApiStatus() {
+  const val = document.getElementById('api-key-input').value.trim();
+  const dot = document.getElementById('api-dot');
+  const txt = document.getElementById('api-text');
+  if (val.startsWith('sk-ant-')) {
+    dot.style.background = '#27ae60';
+    dot.style.boxShadow = '0 0 6px rgba(39,174,96,0.5)';
+    txt.textContent = 'API ready';
+  } else if (val.length > 0) {
+    dot.style.background = '#d97706';
+    dot.style.boxShadow = 'none';
+    txt.textContent = 'Check key';
+  } else {
+    dot.style.background = '#888';
+    dot.style.boxShadow = 'none';
+    txt.textContent = 'No API key';
+  }
+}
+
+// ─── CSV ──────────────────────────────────────────────────────────────────────
+function handleCSV(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    csvData = e.target.result;
+    document.querySelector('.topbar-meta').textContent = `Data loaded: ${file.name}`;
+  };
+  reader.readAsText(file);
+}
+
+// ─── CLAUDE API ───────────────────────────────────────────────────────────────
+async function callClaude(prompt) {
+  const key = apiKey || localStorage.getItem('fv_api_key');
+  if (!key) {
+    alert('Please add your Anthropic API key in Settings first.');
+    return null;
+  }
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  const data = await response.json();
+  return data.content?.[0]?.text || null;
+}
+
+// ─── ADS AGENT ────────────────────────────────────────────────────────────────
+async function runAdsAgent() {
+  const btn = document.getElementById('ads-btn');
+  const loading = document.getElementById('ads-loading');
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+  loading.classList.add('visible');
+
+  const data = csvData || `
+CAMPAIGN: Nieuwe campagne voor Verkoop (ACTIVE, Sales objective, Advantage+ enabled)
+Period: 12 Apr – 11 Mei 2026 | Budget: €25/day | Total Spend: €51.44
+Reach: 3,242 | Impressions: 4,483 | Link Clicks: 104 | CTR: 2.32% | CPC: €0.50 | CPM: €11.47
+
+AD SETS:
+1. Verkoop (INACTIVE/PAUSED): Spend €20.76 | Reach 1,184 | Clicks 49 | CTR 3.15% | CPC €0.42 | CPM €13.33
+2. Vrouwen (ACTIVE): Spend €16.34 | Reach 1,307 | Clicks 33 | CTR 2.07% | CPC €0.50 | CPM €10.24
+3. Mannen (ACTIVE): Spend €14.34 | Reach 972 | Clicks 22 | CTR 1.65% | CPC €0.65 | CPM €10.77
+
+PREVIOUS CAMPAIGNS:
+- Promoten [15-3]: €3.85 spend | 38 clicks | CTR 7.09% | CPM €7.18 | 31 landing page views | CPA €0.12
+- TEST 2: €0.73 spend | 5 clicks | CTR 4.50%
+
+CONTEXT: Feel Vibrance, Dutch premium sexual wellness supplement. No purchases tracked yet via pixel (pixel recently installed). Advantage+ cannot be disabled. Previous campaigns were Traffic objective. Brand story: "Het leven vraagt veel. Verlangen verdwijnt als eerste. Sens geeft het terug."
+`;
+
+  const prompt = `You are an expert Meta Ads strategist for Feel Vibrance, a Dutch premium sexual wellness supplement brand (product: Sens, plant-based capsules, €45).
+
+Analyse this advertising data and respond in EXACTLY this JSON format — nothing before or after the JSON:
+
+{
+  "diagnosis": "2-3 sentence honest diagnosis of current performance",
+  "actions": [
+    {
+      "priority": "urgent",
+      "title": "Short action title",
+      "description": "What to do and how exactly",
+      "impact": "Expected result"
+    },
+    {
+      "priority": "week",
+      "title": "Short action title", 
+      "description": "What to do and how exactly",
+      "impact": "Expected result"
+    },
+    {
+      "priority": "monitor",
+      "title": "Short action title",
+      "description": "What to do and how exactly",
+      "impact": "Expected result"
+    }
+  ],
+  "creative_tip": "One specific creative recommendation based on the data",
+  "kpi_targets": "Realistic 30-day targets: CTR X%, CPC €X, first purchase target"
+}
+
+Priority levels: urgent = do today, week = this week, monitor = watch and wait.
+Be specific — reference actual numbers. No generic advice.
+
+DATA:
+${data}`;
+
+  try {
+    const text = await callClaude(prompt);
+    if (!text) throw new Error('No response');
+
+    const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    renderActions(parsed);
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('dynamic-actions').innerHTML = `
+      <div style="padding:20px;color:#c0392b;font-size:12px">
+        Analysis failed. Check your API key in Settings and try again.<br>
+        <small style="opacity:0.7">${e.message}</small>
+      </div>`;
+    document.getElementById('default-actions').style.display = 'none';
+    document.getElementById('dynamic-actions').style.display = 'block';
+  }
+
+  btn.disabled = false;
+  btn.classList.remove('loading');
+  loading.classList.remove('visible');
+}
+
+function renderActions(data) {
+  const container = document.getElementById('dynamic-actions');
+  const badge = document.getElementById('actions-badge');
+  const fullCard = document.getElementById('full-analysis-card');
+  const fullResult = document.getElementById('ads-result');
+
+  badge.textContent = `${data.actions.length} actions`;
+
+  let html = '';
+  data.actions.forEach((a, i) => {
+    html += `
+    <div class="action-card ${a.priority}" onclick="toggleDone(this)">
+      <div class="action-priority ${a.priority}">${a.priority === 'urgent' ? '🔴 Urgent' : a.priority === 'week' ? '🟡 This Week' : '🟢 Monitor'}</div>
+      <div class="action-body">
+        <div class="action-title">${a.title}</div>
+        <div class="action-desc">${a.description}</div>
+        <div class="action-impact">→ ${a.impact}</div>
+      </div>
+      <div class="action-done" onclick="event.stopPropagation();toggleCheck(this)">✓</div>
+    </div>`;
+  });
+
+  container.innerHTML = html;
+
+  document.getElementById('default-actions').style.display = 'none';
+  container.style.display = 'block';
+
+  // Full analysis
+  fullCard.style.display = 'block';
+  fullResult.innerHTML = `
+    <div class="analysis-section">
+      <div class="analysis-section-label">Performance Diagnosis</div>
+      <p>${data.diagnosis}</p>
+    </div>
+    <div class="analysis-section">
+      <div class="analysis-section-label">Creative Direction</div>
+      <p>${data.creative_tip}</p>
+    </div>
+    <div class="analysis-section">
+      <div class="analysis-section-label">30-Day KPI Targets</div>
+      <p>${data.kpi_targets}</p>
+    </div>`;
+}
+
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+}
+
+// ─── TRENDS AGENT ─────────────────────────────────────────────────────────────
+async function runTrendsAgent() {
+  const btn = document.getElementById('trends-btn');
+  const loading = document.getElementById('trends-loading');
+  const output = document.getElementById('trends-output');
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+  loading.classList.add('visible');
+  output.style.display = 'none';
+
+  const niche = document.getElementById('niche-input').value;
+  const focusVal = document.getElementById('focus-input').value;
+  const format = document.getElementById('format-input').value;
+  const voice = document.getElementById('voice-input').value;
+  const today = new Date().toLocaleDateString('en-GB', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+  const audienceMap = {
+    vrouwen_30_40_meer_zin: 'Vrouwen 30-40, wil vaker seks met partner, relatie loopt goed maar verlangen is afgenomen',
+    vrouwen_30_40_bevallen: 'Vrouwen 30-40, recent bevallen of kleine kinderen, weinig energie en minder zin',
+    vrouwen_30_40_clean: 'Vrouwen 30-40, gefocused op clean supplements, leest ingrediëntenlijsten, skeptisch over claims',
+    vrouwen_30_50_vakantie: 'Vrouwen 30-50, vakantieperiode, zin in intimiteit en verbinding met partner op vakantie',
+    vrouwen_30_50_lesbi: 'Vrouwen 30-50, lesbisch, plant-based supplement voor seksueel verlangen',
+    mannen_30_50_performance: 'Mannen 30-50, high performance mindset, optimaliseert gezondheid en vitaliteit',
+    mannen_30_50_vakantie: 'Mannen 30-50, vakantieperiode, meer zin in intimiteit',
+    mannen_30_50_homo: 'Mannen 30-50, homo, plant-based supplement voor seksueel verlangen en energie',
+    vrouwen_50_menopauze: 'Vrouwen 50+, in of rond menopauze, hormonale veranderingen en afname verlangen',
+    vrouwen_50_lente: 'Vrouwen 50+, lentekriebels, voelt zich vitaal en wil verlangen ondersteunen',
+    vrouwen_50_sporten: 'Vrouwen 50+, actief en sportief, wil energie en vitaliteit ook in seksueel welzijn',
+    mannen_50_erbij: 'Mannen 50+, wil erbij horen in wellness conversation, normaliseren van seksueel welzijn',
+    mannen_50_sporten: 'Mannen 50+, actief en sportief, vitaliteit en prestatie ook buiten de sportschool',
+    algemeen_50_minder_zin: '50+ algemeen, merkt daling in seksueel verlangen, zoekt natuurlijke ondersteuning',
+    koppels_30_45_meer_zin: 'Koppels 30-45, willen vaker seks, verlangen afgenomen door drukte en stress',
+    koppels_30_45_vakantie: 'Koppels 30-45, vakantie als moment om verbinding en intimiteit te herstellen',
+    koppels_50_vakantie: 'Koppels 50+, vakantie als moment voor intimiteit, meer tijd en rust samen',
+    koppels_50_sporten: 'Koppels 50+, actief samen, sport en vitaliteit als gedeelde waarde inclusief intimiteit',
+    ai_suggest: 'AI_SUGGEST'
+  };
+
+  const audienceDesc = audienceMap[focusVal] || focusVal;
+  const isAiSuggest = audienceDesc === 'AI_SUGGEST';
+
+  const audienceInstruction = isAiSuggest
+    ? `Based on the brand, current season (${today}), and wellness trends in the Dutch market, suggest the BEST audience segment to target today and explain why. Then create content for that audience.`
+    : `Target audience: ${audienceDesc}`;
+
+  const prompt = `You are an Instagram content strategist for Feel Vibrance, a Dutch premium sexual wellness supplement brand. Today is ${today}.
+
+BRAND: Feel Vibrance — Sens capsules. Plant-based sexual wellness supplement.
+${audienceInstruction}
+VOICE: ${voice}
+CORE MESSAGE: "Het leven vraagt veel. Verlangen verdwijnt als eerste. Sens geeft het terug."
+AVOID: libido, game-changer, boost, optimaliseer, em-dashes
+FORMAT PRIORITY: ${format}
+NICHE: ${niche}
+
+Respond in EXACTLY this JSON format — nothing before or after:
+
+{
+  "audience_used": "Name of audience segment used (or suggested if AI_SUGGEST mode)",
+  "audience_reason": "Why this audience segment is right for today (only fill if AI_SUGGEST mode, otherwise leave empty)",
+  "trend1": {"label": "Trend name", "description": "What's trending and why relevant"},
+  "trend2": {"label": "Trend name", "description": "What's trending and why relevant"},
+  "post_time": {"time": "e.g. 19:30", "reason": "Why this time for Dutch audience"},
+  "post": {
+    "format": "Reel / Carousel / Static / Story",
+    "concept": "One sentence describing the visual",
+    "hook": "Opening line or visual hook",
+    "caption": "Full ready-to-post caption in appropriate language (Dutch or English whichever is stronger for this segment)",
+    "hashtags": "#tag1 #tag2 #tag3 #tag4 #tag5 #tag6 #tag7 #tag8 #tag9 #tag10"
+  },
+  "week_plan": [
+    {"day": "Tomorrow", "format": "Format", "concept": "Concept", "hook": "Hook"},
+    {"day": "Day after", "format": "Format", "concept": "Concept", "hook": "Hook"},
+    {"day": "In 3 days", "format": "Format", "concept": "Concept", "hook": "Hook"}
+  ],
+  "growth_tip": "One specific organic growth action for today targeting this audience segment"
+}`;
+
+  try {
+    const text = await callClaude(prompt);
+    if (!text) throw new Error('No response');
+
+    const cleaned = text.replace(/```json\n?|\n?```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    renderTrends(parsed);
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('trends-result').innerHTML = `
+      <p style="color:#c0392b;font-size:12px">Failed to generate. Check your API key in Settings.<br><small>${e.message}</small></p>`;
+    output.style.display = 'block';
+  }
+
+  btn.disabled = false;
+  btn.classList.remove('loading');
+  loading.classList.remove('visible');
+}
+
+function renderTrends(data) {
+  const cards = document.getElementById('trends-cards');
+  const result = document.getElementById('trends-result');
+  const output = document.getElementById('trends-output');
+
+  const audienceBlock = data.audience_reason
+    ? `<div style="margin-bottom:16px;padding:12px 14px;background:rgba(196,168,130,0.08);border-left:3px solid var(--gold);border-radius:0 5px 5px 0">
+        <div style="font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold-dark);margin-bottom:4px">✦ AI Audience Suggestion</div>
+        <div style="font-size:12px;font-weight:500;color:var(--bordeaux);margin-bottom:3px">${data.audience_used}</div>
+        <div style="font-size:11px;color:var(--text-mid)">${data.audience_reason}</div>
+       </div>` : `<div style="margin-bottom:16px;padding:10px 14px;background:rgba(196,168,130,0.05);border-radius:5px">
+        <div style="font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-light);margin-bottom:2px">Audience segment</div>
+        <div style="font-size:12px;font-weight:500;color:var(--bordeaux)">${data.audience_used}</div>
+       </div>`;
+
+  cards.innerHTML = `
+    <div class="card">
+      <div class="card-header"><span class="card-title">Trend 1</span></div>
+      <div class="card-body">
+        <div style="font-size:13px;font-weight:500;color:var(--bordeaux);margin-bottom:6px">${data.trend1.label}</div>
+        <div style="font-size:11px;color:var(--text-mid);line-height:1.5">${data.trend1.description}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Trend 2</span></div>
+      <div class="card-body">
+        <div style="font-size:13px;font-weight:500;color:var(--bordeaux);margin-bottom:6px">${data.trend2.label}</div>
+        <div style="font-size:11px;color:var(--text-mid);line-height:1.5">${data.trend2.description}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Best Post Time</span></div>
+      <div class="card-body">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--bordeaux);margin-bottom:6px">${data.post_time.time}</div>
+        <div style="font-size:11px;color:var(--text-mid);line-height:1.5">${data.post_time.reason}</div>
+      </div>
+    </div>`;
+
+  result.innerHTML = `
+    ${audienceBlock}
+    <div class="analysis-section">
+      <div class="analysis-section-label">Today's Post — ${data.post.format}</div>
+      <p><strong>Concept:</strong> ${data.post.concept}</p>
+      <p><strong>Hook:</strong> ${data.post.hook}</p>
+    </div>
+    <div class="analysis-section">
+      <div class="analysis-section-label">Caption (ready to copy)</div>
+      <p style="background:rgba(196,168,130,0.06);padding:12px;border-left:2px solid var(--gold);font-style:italic">${data.post.caption.replace(/\n/g,'<br>')}</p>
+      <p style="margin-top:8px;font-size:11px;color:var(--gold-dark)">${data.post.hashtags}</p>
+    </div>
+    <div class="analysis-section">
+      <div class="analysis-section-label">This Week's Plan</div>
+      ${data.week_plan.map(d => `
+        <div style="margin-bottom:10px;padding:10px;background:rgba(196,168,130,0.04);border-radius:5px">
+          <div style="font-size:10px;color:var(--text-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">${d.day} · ${d.format}</div>
+          <div style="font-size:12px;color:var(--text-mid)">${d.concept}</div>
+          <div style="font-size:11px;color:var(--gold-dark);margin-top:3px">Hook: "${d.hook}"</div>
+        </div>`).join('')}
+    </div>
+    <div class="analysis-section">
+      <div class="analysis-section-label">Organic Growth Tip</div>
+      <p>${data.growth_tip}</p>
+    </div>`;
+
+  output.style.display = 'block';
+}
+</script>
+</body>
+</html>
